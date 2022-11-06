@@ -1,5 +1,6 @@
 ﻿using DisCatSharp.Entities;
 using NodaTime;
+using NodaTime.Extensions;
 
 namespace BackupBot.Bot
 {
@@ -290,5 +291,40 @@ namespace BackupBot.Bot
             public string Icon { get; set; } = string.Empty;
             public long Permissions { get; set; }
         }
+
+        public class ApiFullGuildModel
+        {
+            public string Id { get; set; } = string.Empty;
+            public string Name { get; set; } = string.Empty;
+            public string Icon { get; set; } = string.Empty;
+            public string BotJoined { get; set; } = string.Empty;
+            public string GuildCreated { get; set; } = string.Empty;
+            public string MemberCount { get; set; } = string.Empty;
+            // maybe add channels for later?
+
+            public ApiFullGuildModel(DiscordGuild guild)
+            {
+                this.Id = guild.Id.ToString();
+                this.Name = guild.Name;
+                this.Icon = guild.IconHash;
+                this.BotJoined = guild.JoinedAt.ToString();
+                this.GuildCreated = guild.CreationTimestamp.ToString();
+                this.MemberCount = guild.MemberCount.ToString();
+            }
+            
+            public ApiFullGuildModel()
+            {
+
+            }
+        }
+
+        /*
+        public class ApiSmallChannelModel
+        {
+            public string Name { get; set; } = string.Empty;
+            public short ChannelType { get; set; }
+            public bool Nsfw { get; set; }
+        }
+        */
     }
 }

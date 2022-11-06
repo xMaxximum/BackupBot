@@ -14,7 +14,7 @@
 
 	<Target Name="CopyConfigurationFiles" AfterTargets="Build">
 		<Copy SourceFiles="@(MySourceFiles)" DestinationFolder="$(OutDir)" />
-	</Target>			
+	</Target>
 	<!--END CONFIGURATION COPY SECTION-->
 	
 	
@@ -25,6 +25,17 @@
 
 	<ItemGroup>
 		<ProjectReference Include="..\BackupBot.Bot\BackupBot.Bot.csproj" />
+	</ItemGroup>
+
+	<ItemGroup>
+	  <Resource Include="appsettings.json" />
+	  <Resource Include="Global.cs" />
+	</ItemGroup>
+
+	<ItemGroup>
+	  <Content Update="appsettings.json">
+	    <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+	  </Content>
 	</ItemGroup>
 
 

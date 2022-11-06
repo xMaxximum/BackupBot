@@ -17,8 +17,8 @@ internal class Bot : DiscordShardedHostedService, IBot
 
     public Bot(IConfiguration config,
         ILogger<Bot> logger,
-        IServiceProvider provider, 
-        IHostApplicationLifetime lifetime) : base(config, logger, provider, lifetime, "BackupBot") {}
+        IServiceProvider provider,
+        IHostApplicationLifetime lifetime) : base(config, logger, provider, lifetime, "BackupBot") { }
 
     /// <summary>
     /// Attempts to register commands from our BakupBot.Bot Project
@@ -103,7 +103,7 @@ internal class Bot : DiscordShardedHostedService, IBot
 
     protected override async Task ConfigureExtensionsAsync()
     {
-        var commandsExtension = ShardedClient.UseApplicationCommandsAsync(new () { ServiceProvider = serviceProvider, EnableDefaultHelp = true }).Result;
+        var commandsExtension = ShardedClient.UseApplicationCommandsAsync(new() { ServiceProvider = serviceProvider, EnableDefaultHelp = true }).Result;
         foreach (var client in commandsExtension)
         {
             RegisterCommands(client.Value);
@@ -139,22 +139,22 @@ internal class Bot : DiscordShardedHostedService, IBot
         var guilds = JsonConvert.DeserializeObject<List<ApiNormalGuildModel>>(json);
 
         var finishedGuilds = new List<ApiGuildModel>();
-        
+
         foreach (var guild in guilds)
         {
             var shard = ShardedClient.GetShard(Convert.ToUInt64(guild.Id));
             var perms = (Permissions)guild.Permissions;
 
-            if (shard != null && shard.Guilds.TryGetValue(Convert.ToUInt64(guild.Id), out _)) 
+            if (shard != null && shard.Guilds.TryGetValue(Convert.ToUInt64(guild.Id), out _))
             {
-                if (perms.HasPermission(Permissions.Administrator) || perms.HasPermission(Permissions.ManageGuild)) 
+                if (perms.HasPermission(Permissions.ManageGuild))
                 {
-                    finishedGuilds.Add(new ApiGuildModel {  BotJoined = true, Icon = guild.Icon, Id = guild.Id, IsAdmin = true, Name = guild.Name });
+                    finishedGuilds.Add(new ApiGuildModel { BotJoined = true, Icon = guild.Icon, Id = guild.Id, IsAdmin = true, Name = guild.Name });
                 }
             }
             else
             {
-                if (perms.HasPermission(Permissions.Administrator) || perms.HasPermission(Permissions.ManageGuild))
+                if (perms.HasPermission(Permissions.ManageGuild))
                 {
                     finishedGuilds.Add(new ApiGuildModel { BotJoined = false, Icon = guild.Icon, Id = guild.Id, IsAdmin = true, Name = guild.Name });
                 }
@@ -162,5 +162,43 @@ internal class Bot : DiscordShardedHostedService, IBot
         }
 
         return Task.FromResult(finishedGuilds);
+    }
+
+    public Task<ApiFullGuildModel> GetGuild(ulong guildId, ulong userId)
+    {
+        try
+        {
+            var guild = ShardedClient.GetShard(guildId).TryGetGuildAsync(guildId).Result;
+
+            if (guild != null)
+            {
+                if (guild.GetMemberAsync(userId).Result.Permissions.HasFlag(Permissions.ManageGuild))
+                    return Task.FromResult(new ApiFullGuildModel(guild));
+                else return Task.FromResult(new ApiFullGuildModel());
+            }
+
+            else return Task.FromResult(new ApiFullGuildModel());
+        }
+        catch
+        {
+            return Task.FromResult(new ApiFullGuildModel());
+        }
+    }
+
+    public Task<bool> CheckGuild(ulong guildId, ulong userId)
+    {
+        try
+        {
+            var guild = ShardedClient.GetShard(guildId).TryGetGuildAsync(guildId).Result;
+            if (guild != null)
+            {
+                return Task.FromResult(guild.GetMemberAsync(userId).Result.Permissions.HasFlag(Permissions.ManageGuild));
+            }
+            else return Task.FromResult(false);
+        }
+        catch
+        {
+            return Task.FromResult(false);
+        }
     }
 }
